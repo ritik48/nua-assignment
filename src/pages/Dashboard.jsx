@@ -88,8 +88,6 @@ function Dashboard() {
         setSortedFilteredData(sortedData);
     }, [sortBy, bookData, authorLoading, bookFetching]);
 
-    console.log(sortedFilteredData);
-
     return (
         <div className="mt-5">
             <div className="max-w-6xl mx-auto">
@@ -106,7 +104,6 @@ function Dashboard() {
                             placeholder="Search book"
                         />
                         <select
-                            defaultValue={"title"}
                             value={searchBy}
                             onChange={(e) => {
                                 if (search.length === 0) return;
@@ -131,7 +128,6 @@ function Dashboard() {
                             <GoDownload size={20} />
                         </div>
                         <select
-                            defaultValue={"10"}
                             id="countries"
                             onChange={(e) => {
                                 if (search.length === 0) return;
