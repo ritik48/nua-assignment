@@ -3,6 +3,8 @@ import { useGetBooksQuery, useLazyGetAuthorQuery } from "../redux/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IoMdArrowBack, IoMdArrowForward } from "react-icons/io";
 import { useDebounce } from "../hooks/useDebounce";
+import { IoIosArrowRoundUp } from "react-icons/io";
+import { IoIosArrowRoundDown } from "react-icons/io";
 
 function Dashboard() {
     const [page, setPage] = useState(1);
@@ -10,6 +12,8 @@ function Dashboard() {
 
     const [search, setSearch] = useState("lord of the rings");
     const debouncedSearch = useDebounce(search);
+
+    const [sortBy, setSortBy] = useState({});
 
     const [searchBy, setSearchBy] = useState("title");
 
@@ -32,6 +36,8 @@ function Dashboard() {
     ] = useLazyGetAuthorQuery();
 
     let authorData = useRef({});
+
+    const [bookData, setBookData] = useState([]);
 
     useEffect(() => {
         if (bookFetching) return;
@@ -62,7 +68,103 @@ function Dashboard() {
         });
     }, [bookFetching, books, triggerAuthor, limit]);
 
-    console.log("Book fetching = ", bookFetching);
+    const columns = useMemo(
+        () => [
+            ["title", "asc"],
+            ["author_name", "asc"],
+            ["first_publish_year", "asc"],
+            ["subject", "asc"],
+            ["dob", "asc"],
+            ["topWork", "asc"],
+            ["rating", "asc"],
+        ],
+        []
+    );
+    useEffect(() => {
+        if (authorLoading || bookFetching) return;
+        // console.log("here = ", authorData);
+
+        const tempBookData = books.docs.map((book) => {
+            if (!book.author_name) {
+                return {
+                    ...book,
+                    author_top_work: "NA",
+                    author_dob: "NA",
+                    author_name: "NA",
+                    subject: book.subject ? book.subject[0] : "NA",
+                };
+            }
+
+            // console.log("author = ", authorData.current) line 2
+            const topWork =
+                authorData.current?.[book.author_name[0]]?.topWork ?? "NA";
+            const dob = authorData.current?.[book.author_name[0]]?.dob ?? "NA";
+
+            return {
+                ...book,
+                author_topWork: topWork,
+                author_dob: dob,
+                subject: book.subject ? book.subject[0] : "NA",
+                author_name: book.author_name[0],
+            };
+        });
+
+        setBookData(tempBookData);
+    }, [authorLoading, bookFetching, books, sortBy, columns]);
+
+    function handleChangeSort(value) {
+        setSortBy((prev) => ({
+            ...prev,
+            [value]: prev[value] === "asc" ? "desc" : "asc",
+        }));
+    }
+
+    const [sortedFilteredData, setSortedFilteredData] = useState([]);
+
+    useEffect(() => {
+        if (authorLoading || bookFetching) return;
+
+        const sortedData = [...bookData].sort((a, b) => {
+            for (const column in sortBy) {
+                const direction = sortBy[column];
+                const aValue = a[column];
+                const bValue = b[column];
+
+                // console.log("column = ", column);
+
+                // Handling "NA" values
+                if (aValue === "NA" && bValue !== "NA") {
+                    return 1; // "NA" should come after other values
+                }
+                if (aValue !== "NA" && bValue === "NA") {
+                    return -1; // Other value should come before "NA"
+                }
+
+                // If values are equal or both "NA", move to next filter
+                if (aValue === bValue) continue;
+
+                // Comparing different data types
+                if (typeof aValue === "string" && typeof bValue === "string") {
+                    // If both values are strings, perform string comparison
+                    return direction === "asc"
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                } else {
+                    // If one value is a string and the other is a number, prioritize the number
+                    if (isNaN(aValue) || isNaN(bValue)) {
+                        return isNaN(aValue) ? -1 : 1; // String comes after number
+                    }
+                    // Both values are numbers, perform numeric comparison
+                    return direction === "asc"
+                        ? aValue - bValue
+                        : bValue - aValue;
+                }
+            }
+            return 0;
+        });
+
+        setSortedFilteredData(sortedData);
+    }, [sortBy, bookData, authorLoading, bookFetching]);
 
     return (
         <div className="mt-5">
@@ -117,25 +219,43 @@ function Dashboard() {
                 </div>
                 <div className="mt-4 overflow-y-scroll h-[450px] rounded-md">
                     <div className="grid top-0 sticky bg-[#dedddd] text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]">
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
-                            Title
+                        <div className="flex items-center px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                            Title{" "}
+                            <span onClick={() => handleChangeSort("title")}>
+                                {sortBy["title"] === "desc" ? (
+                                    <IoIosArrowRoundUp size={20} />
+                                ) : (
+                                    <IoIosArrowRoundDown size={20} />
+                                )}
+                            </span>
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Publish year
+                            <span
+                                onClick={() =>
+                                    handleChangeSort("first_publish_year")
+                                }
+                            >
+                                {sortBy["first_publish_year"] === "desc" ? (
+                                    <IoIosArrowRoundUp size={20} />
+                                ) : (
+                                    <IoIosArrowRoundDown size={20} />
+                                )}
+                            </span>
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Subject
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author DOB
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author Top Work
                         </div>
-                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 flex items-center py-3 text-sm font-semibold border-[#aaaaaa]">
                             Average rating
                         </div>
                     </div>
@@ -159,7 +279,7 @@ function Dashboard() {
                                 </div>
                             )}
                             {search.length > 0 &&
-                                books.docs.map((book, index) => (
+                                sortedFilteredData.map((book, index) => (
                                     <div
                                         key={index}
                                         className="grid text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]"
@@ -168,27 +288,19 @@ function Dashboard() {
                                             {book.title}
                                         </div>
                                         <div className="px-3  py-3 text-sm border-[#aaaaaa]">
-                                            {book?.author_name?.[0] || "NA"}
+                                            {book.author_name}
                                         </div>
                                         <div className="px-3 py-3 text-sm  border-[#aaaaaa]">
-                                            {book.first_publish_year || "NA"}
+                                            {book.first_publish_year}
                                         </div>
                                         <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                            {book.subject?.[0] || "NA"}
+                                            {book.subject}
                                         </div>
                                         <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                            {(book.author_name?.[0] &&
-                                                authorData.current?.[
-                                                    book.author_name[0]
-                                                ]?.dob) ||
-                                                "NA"}
+                                            {book.author_dob}
                                         </div>
                                         <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                            {(book.author_name?.[0] &&
-                                                authorData.current?.[
-                                                    book.author_name[0]
-                                                ]?.topWork) ||
-                                                "NA"}
+                                            {book.author_topWork}
                                         </div>
                                         <div className="px-3 py-3  text-sm border-[#aaaaaa]">
                                             {book.ratings_average || "NA"}
