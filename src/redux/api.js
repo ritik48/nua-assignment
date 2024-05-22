@@ -7,7 +7,7 @@ const myApi = createApi({
     }),
     endpoints: (builder) => ({
         getBooks: builder.query({
-            query: ({limit, offset, book = "lord of the rings"}) => `search.json?title=${book}&offset=${offset}&limit=${limit}`,
+            query: ({limit, offset, searchBy, search}) => `search.json?${searchBy}=${search}&offset=${offset}&limit=${limit}`,
         }),
         getAuthor: builder.query({
             query: (author) => `search/authors.json?q=${author}`,

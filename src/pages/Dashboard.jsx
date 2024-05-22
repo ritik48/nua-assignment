@@ -1,11 +1,17 @@
 import { GoDownload } from "react-icons/go";
 import { useGetBooksQuery, useLazyGetAuthorQuery } from "../redux/api";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IoMdArrowBack, IoMdArrowForward } from "react-icons/io";
+import { useDebounce } from "../hooks/useDebounce";
 
 function Dashboard() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+
+    const [search, setSearch] = useState("lord of the rings");
+    const debouncedSearch = useDebounce(search);
+
+    const [searchBy, setSearchBy] = useState("title");
 
     const offset = (page - 1) * limit;
 
@@ -15,7 +21,10 @@ function Dashboard() {
         data: books,
         error: bookError,
         isFetching: bookFetching,
-    } = useGetBooksQuery({ limit, offset });
+    } = useGetBooksQuery(
+        { limit, offset, searchBy, search: debouncedSearch },
+        { skip: !debouncedSearch }
+    );
 
     const [
         triggerAuthor,
@@ -62,15 +71,21 @@ function Dashboard() {
                 <div className="flex justify-between items-center mt-5">
                     <div className="flex items-center gap-2">
                         <input
+                            value={search}
+                            onChange={(e) => {
+                                setPage(1);
+                                setSearch(e.target.value);
+                            }}
                             className="text-lg  outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-300 border px-4 py-2 rounded-md"
                             placeholder="Search book"
                         />
                         <select
                             defaultValue={"title"}
+                            value={searchBy}
+                            onChange={(e) => setSearchBy(e.target.value)}
                             id="countries"
                             className="font-medium bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-300 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         >
-                            <option>Search book by</option>
                             <option value="title">Book title</option>
                             <option value="author">Author</option>
                         </select>
@@ -82,7 +97,10 @@ function Dashboard() {
                         <select
                             defaultValue={"10"}
                             id="countries"
-                            onChange={(e) => setLimit(parseInt(e.target.value))}
+                            onChange={(e) => {
+                                setPage(1);
+                                setLimit(parseInt(e.target.value));
+                            }}
                             value={limit}
                             className="font-medium bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-300 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         >
@@ -186,7 +204,10 @@ function Dashboard() {
                                     setPage(page - 1);
                                 }}
                                 disabled={
-                                    bookFetching || !author || authorLoading || (page === 1)
+                                    bookFetching ||
+                                    !author ||
+                                    authorLoading ||
+                                    page === 1
                                 }
                                 className="border-[#a6a5a5] flex justify-center items-center gap-2 text-stone-100 bg-stone-900 rounded-tr-none rounded-br-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
                             >
@@ -194,7 +215,10 @@ function Dashboard() {
                             </button>
                             <button
                                 disabled={
-                                    bookFetching || !author || authorLoading || (page === totalPage)
+                                    bookFetching ||
+                                    !author ||
+                                    authorLoading ||
+                                    page === totalPage
                                 }
                                 onClick={() => {
                                     if (page === totalPage) return;
