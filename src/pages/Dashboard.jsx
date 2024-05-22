@@ -82,7 +82,11 @@ function Dashboard() {
                         <select
                             defaultValue={"title"}
                             value={searchBy}
-                            onChange={(e) => setSearchBy(e.target.value)}
+                            onChange={(e) => {
+                                if (search.length === 0) return;
+                                setPage(1);
+                                setSearchBy(e.target.value);
+                            }}
                             id="countries"
                             className="font-medium bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-300 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         >
@@ -98,6 +102,7 @@ function Dashboard() {
                             defaultValue={"10"}
                             id="countries"
                             onChange={(e) => {
+                                if (search.length === 0) return;
                                 setPage(1);
                                 setLimit(parseInt(e.target.value));
                             }}
@@ -135,101 +140,130 @@ function Dashboard() {
                         </div>
                     </div>
                     {bookFetching || !author || authorLoading ? (
-                        <div className="text-3xl text-center mt-10">
-                            Loading...
-                        </div>
-                    ) : (
-                        books.docs.map((book, index) => (
-                            <div
-                                key={index}
-                                className="grid text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]"
-                            >
-                                <div className="px-3  py-3 text-sm border-[#aaaaaa]">
-                                    {book.title}
-                                </div>
-                                <div className="px-3  py-3 text-sm border-[#aaaaaa]">
-                                    {book?.author_name?.[0] || "NA"}
-                                </div>
-                                <div className="px-3 py-3 text-sm  border-[#aaaaaa]">
-                                    {book.first_publish_year || "NA"}
-                                </div>
-                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                    {book.subject?.[0] || "NA"}
-                                </div>
-                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                    {(book.author_name?.[0] &&
-                                        authorData.current?.[
-                                            book.author_name[0]
-                                        ]?.dob) ||
-                                        "NA"}
-                                </div>
-                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
-                                    {(book.author_name?.[0] &&
-                                        authorData.current?.[
-                                            book.author_name[0]
-                                        ]?.topWork) ||
-                                        "NA"}
-                                </div>
-                                <div className="px-3 py-3  text-sm border-[#aaaaaa]">
-                                    {book.ratings_average || "NA"}
-                                </div>
+                        <>
+                            <div className="text-3xl text-center mt-10">
+                                Loading...
                             </div>
-                        ))
+                            {search.length > 0 && bookError && (
+                                <div className="text-2xl text-red-500 text-center mt-10">
+                                    Something wnet wrong while getting your
+                                    books
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            {search.length === 0 && (
+                                <div className="text-3xl text-center my-8 font-semibold">
+                                    Search something.
+                                </div>
+                            )}
+                            {search.length > 0 &&
+                                books.docs.map((book, index) => (
+                                    <div
+                                        key={index}
+                                        className="grid text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]"
+                                    >
+                                        <div className="px-3  py-3 text-sm border-[#aaaaaa]">
+                                            {book.title}
+                                        </div>
+                                        <div className="px-3  py-3 text-sm border-[#aaaaaa]">
+                                            {book?.author_name?.[0] || "NA"}
+                                        </div>
+                                        <div className="px-3 py-3 text-sm  border-[#aaaaaa]">
+                                            {book.first_publish_year || "NA"}
+                                        </div>
+                                        <div className="px-3 py-3 text-sm border-[#aaaaaa]">
+                                            {book.subject?.[0] || "NA"}
+                                        </div>
+                                        <div className="px-3 py-3 text-sm border-[#aaaaaa]">
+                                            {(book.author_name?.[0] &&
+                                                authorData.current?.[
+                                                    book.author_name[0]
+                                                ]?.dob) ||
+                                                "NA"}
+                                        </div>
+                                        <div className="px-3 py-3 text-sm border-[#aaaaaa]">
+                                            {(book.author_name?.[0] &&
+                                                authorData.current?.[
+                                                    book.author_name[0]
+                                                ]?.topWork) ||
+                                                "NA"}
+                                        </div>
+                                        <div className="px-3 py-3  text-sm border-[#aaaaaa]">
+                                            {book.ratings_average || "NA"}
+                                        </div>
+                                    </div>
+                                ))}
+                        </>
                     )}
                 </div>
                 {!bookFetching && !authorLoading && author && (
                     <div className="shadow-md  border-[#aaaaaa] rounded-md px-4 py-3 flex items-center justify-between">
-                        <div>
-                            Showing:{" "}
-                            <span className="font-semibold">{offset + 1}</span>{" "}
-                            to{" "}
-                            <span className="font-semibold">
-                                {limit * page}
-                            </span>{" "}
-                            of{" "}
-                            <span className="font-semibold">
-                                {books.numFound}
-                            </span>{" "}
-                            results
-                        </div>
-                        <div className="ml-auto mr-4">
-                            Page: <span className="font-semibold">{page}</span>{" "}
-                            of{" "}
-                            <span className="font-semibold">{totalPage}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <button
-                                onClick={() => {
-                                    if (page === 1) return;
-                                    setPage(page - 1);
-                                }}
-                                disabled={
-                                    bookFetching ||
-                                    !author ||
-                                    authorLoading ||
-                                    page === 1
-                                }
-                                className="border-[#a6a5a5] flex justify-center items-center gap-2 text-stone-100 bg-stone-900 rounded-tr-none rounded-br-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
-                            >
-                                <IoMdArrowBack size={20} /> Previous
-                            </button>
-                            <button
-                                disabled={
-                                    bookFetching ||
-                                    !author ||
-                                    authorLoading ||
-                                    page === totalPage
-                                }
-                                onClick={() => {
-                                    if (page === totalPage) return;
-                                    setPage(page + 1);
-                                }}
-                                className="border-[#a6a5a5] gap-2 flex justify-center items-center text-stone-100 bg-stone-900 border-l-0 rounded-tl-none rounded-bl-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
-                            >
-                                Next
-                                <IoMdArrowForward size={20} />
-                            </button>
-                        </div>
+                        {books.numFound === 0 && search.length > 0 && (
+                            <div>No results found</div>
+                        )}
+                        {books.numFound > 0 && search.length > 0 && (
+                            <div>
+                                Showing:{" "}
+                                <span className="font-semibold">
+                                    {Math.min(offset + 1, books.numFound)}
+                                </span>{" "}
+                                to{" "}
+                                <span className="font-semibold">
+                                    {Math.min(limit * page, books.numFound)}
+                                </span>{" "}
+                                of{" "}
+                                <span className="font-semibold">
+                                    {books.numFound}
+                                </span>{" "}
+                                results
+                            </div>
+                        )}
+                        {books.numFound > 0 && search.length > 0 && (
+                            <div className="ml-auto mr-4">
+                                Page:{" "}
+                                <span className="font-semibold">{page}</span> of{" "}
+                                <span className="font-semibold">
+                                    {totalPage}
+                                </span>
+                            </div>
+                        )}
+                        {books.numFound > 0 && search.length > 0 && (
+                            <div className="flex items-center">
+                                <button
+                                    onClick={() => {
+                                        if (page === 1) return;
+                                        setPage(page - 1);
+                                    }}
+                                    disabled={
+                                        bookFetching ||
+                                        !author ||
+                                        authorLoading ||
+                                        page === 1
+                                    }
+                                    className="border-[#a6a5a5] flex justify-center items-center gap-2 text-stone-100 bg-stone-900 rounded-tr-none rounded-br-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
+                                >
+                                    <IoMdArrowBack size={20} /> Previous
+                                </button>
+                                <button
+                                    disabled={
+                                        bookFetching ||
+                                        !author ||
+                                        authorLoading ||
+                                        page === totalPage
+                                    }
+                                    onClick={() => {
+                                        if (page === totalPage) return;
+                                        setPage(page + 1);
+                                    }}
+                                    className="border-[#a6a5a5] gap-2 flex justify-center items-center text-stone-100 bg-stone-900 border-l-0 rounded-tl-none rounded-bl-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
+                                >
+                                    Next
+                                    <IoMdArrowForward size={20} />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
