@@ -1,6 +1,7 @@
 import { GoDownload } from "react-icons/go";
 import { useGetBooksQuery, useLazyGetAuthorQuery } from "../redux/api";
 import { useEffect, useRef, useState } from "react";
+import { IoMdArrowBack, IoMdArrowForward } from "react-icons/io";
 
 function Dashboard() {
     const [page, setPage] = useState(1);
@@ -20,8 +21,6 @@ function Dashboard() {
         triggerAuthor,
         { data: author, isLoading: authorLoading, errror: authorError },
     ] = useLazyGetAuthorQuery();
-
-    // console.log("book loading = ", bookFetching);
 
     let authorData = useRef({});
 
@@ -77,12 +76,14 @@ function Dashboard() {
                         </select>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="border self-stretch px-3 py-2 flex justify-center cursor-pointer transition-all duration-300 items-center hover:bg-black hover:text-white rounded-md">
+                        <div className="self-stretch px-3 py-2 flex justify-center cursor-pointer transition-all duration-300 items-center hover:bg-black hover:text-white rounded-md">
                             <GoDownload size={20} />
                         </div>
                         <select
                             defaultValue={"10"}
                             id="countries"
+                            onChange={(e) => setLimit(parseInt(e.target.value))}
+                            value={limit}
                             className="font-medium bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-300 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         >
                             <option value="10">10 per page</option>
@@ -93,25 +94,25 @@ function Dashboard() {
                 </div>
                 <div className="mt-4 overflow-y-scroll h-[450px] rounded-md">
                     <div className="grid top-0 sticky bg-[#dedddd] text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]">
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Title
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Publish year
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Subject
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author DOB
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Author Top Work
                         </div>
-                        <div className="px-3 py-3 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
+                        <div className="px-3 py-3 text-sm font-semibold border-[#aaaaaa]">
                             Average rating
                         </div>
                     </div>
@@ -123,57 +124,90 @@ function Dashboard() {
                         books.docs.map((book, index) => (
                             <div
                                 key={index}
-                                className="grid border-l-0 text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]"
+                                className="grid text-black grid-cols-[0.4fr_0.2fr_0.2fr_0.3fr_0.2fr_0.3fr_0.2fr]"
                             >
-                                <div className="px-3 border-b-0 py-3 border text-sm border-[#aaaaaa]">
+                                <div className="px-3  py-3 text-sm border-[#aaaaaa]">
                                     {book.title}
                                 </div>
-                                <div className="px-3 border-b-0 border-l-0 py-3 border text-sm border-[#aaaaaa]">
+                                <div className="px-3  py-3 text-sm border-[#aaaaaa]">
                                     {book?.author_name?.[0] || "NA"}
                                 </div>
-                                <div className="px-3 border-b-0 border-l-0 py-3 border text-sm  border-[#aaaaaa]">
+                                <div className="px-3 py-3 text-sm  border-[#aaaaaa]">
                                     {book.first_publish_year || "NA"}
                                 </div>
-                                <div className="px-3 border-b-0 border-l-0 py-3 border text-sm border-[#aaaaaa]">
+                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
                                     {book.subject?.[0] || "NA"}
                                 </div>
-                                <div className="px-3 border-b-0 border-l-0 py-3 border text-sm border-[#aaaaaa]">
+                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
                                     {(book.author_name?.[0] &&
                                         authorData.current?.[
                                             book.author_name[0]
                                         ]?.dob) ||
                                         "NA"}
                                 </div>
-                                <div className="px-3 border-b-0 border-l-0 py-3 border text-sm border-[#aaaaaa]">
+                                <div className="px-3 py-3 text-sm border-[#aaaaaa]">
                                     {(book.author_name?.[0] &&
                                         authorData.current?.[
                                             book.author_name[0]
                                         ]?.topWork) ||
                                         "NA"}
                                 </div>
-                                <div className="px-3 py-3 border-l-0 border-b-0 border text-sm font-semibold border-[#aaaaaa]">
-                                    {book.ratings_average}
+                                <div className="px-3 py-3  text-sm border-[#aaaaaa]">
+                                    {book.ratings_average || "NA"}
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
-                <div className="bg-[#f5f5f5] font-semibold border-t-0 border border-[#aaaaaa] px-4 py-3 flex items-center justify-between">
-                    <div>
-                        Page: {page} of {totalPage}
+                {!bookFetching && !authorLoading && author && (
+                    <div className="shadow-md  border-[#aaaaaa] rounded-md px-4 py-3 flex items-center justify-between">
+                        <div>
+                            Showing:{" "}
+                            <span className="font-semibold">{offset + 1}</span>{" "}
+                            to{" "}
+                            <span className="font-semibold">
+                                {limit * page}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-semibold">
+                                {books.numFound}
+                            </span>{" "}
+                            results
+                        </div>
+                        <div className="ml-auto mr-4">
+                            Page: <span className="font-semibold">{page}</span>{" "}
+                            of{" "}
+                            <span className="font-semibold">{totalPage}</span>
+                        </div>
+                        <div className="flex items-center">
+                            <button
+                                onClick={() => {
+                                    if (page === 1) return;
+                                    setPage(page - 1);
+                                }}
+                                disabled={
+                                    bookFetching || !author || authorLoading || (page === 1)
+                                }
+                                className="border-[#a6a5a5] flex justify-center items-center gap-2 text-stone-100 bg-stone-900 rounded-tr-none rounded-br-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
+                            >
+                                <IoMdArrowBack size={20} /> Previous
+                            </button>
+                            <button
+                                disabled={
+                                    bookFetching || !author || authorLoading || (page === totalPage)
+                                }
+                                onClick={() => {
+                                    if (page === totalPage) return;
+                                    setPage(page + 1);
+                                }}
+                                className="border-[#a6a5a5] gap-2 flex justify-center items-center text-stone-100 bg-stone-900 border-l-0 rounded-tl-none rounded-bl-none duration-300 transition-all hover:bg-stone-700 hover:text-white border px-3 py-2 rounded-md"
+                            >
+                                Next
+                                <IoMdArrowForward size={20} />
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button className="border border-[#a6a5a5] px-3 py-2 rounded-md">
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => setPage(page + 1)}
-                            className="border border-[#a6a5a5] px-3 py-2 rounded-md"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );
