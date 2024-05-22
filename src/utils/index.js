@@ -14,11 +14,13 @@ const bookWithAuthor = (authorData, books) => {
         const dob = authorData.current?.[book.author_name[0]]?.dob ?? "NA";
 
         return {
-            ...book,
-            author_topWork: topWork,
-            author_dob: dob,
-            subject: book.subject ? book.subject[0] : "NA",
+            title: book.title,
             author_name: book.author_name[0],
+            first_publish_year: book.first_publish_year,
+            subject: book.subject ? book.subject[0] : "NA",
+            author_dob: dob,
+            author_topWork: topWork,
+            ratings_average: book.ratings_average,
         };
     });
 
@@ -57,4 +59,45 @@ const sortedBooks = (bookData, sortBy) => {
     return sortedData;
 };
 
-export { bookWithAuthor, sortedBooks };
+const convertToCSV = (data) => {
+    if (data.length === 0) return "";
+
+    const columns = [
+        "title",
+        "author",
+        "publish year",
+        "subject",
+        "author dob",
+        "author top work",
+        "average rating",
+    ];
+
+    const headers = columns.join(",");
+    const rows = data.map((row) =>
+        [
+            row.title,
+            row.author_name,
+            row.first_publish_year,
+            row.subject,
+            row.author_dob,
+            row.author_topWork,
+            row.ratings_average,
+        ].join(",")
+    );
+    return [headers, ...rows].join("\n");
+};
+
+const downloadCSV = (data) => {
+    const csvData = convertToCSV(data);
+    const blob = new Blob([csvData], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+export { bookWithAuthor, sortedBooks, downloadCSV };

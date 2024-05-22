@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { IoMdArrowBack, IoMdArrowForward } from "react-icons/io";
 import { useDebounce } from "../hooks/useDebounce";
 import { BookTable } from "../components/BookTable";
-import { bookWithAuthor, sortedBooks } from "../utils";
+import { bookWithAuthor, downloadCSV, sortedBooks } from "../utils";
 
 function Dashboard() {
     const [page, setPage] = useState(1);
@@ -38,6 +38,10 @@ function Dashboard() {
             ...prev,
             [value]: prev[value] === "asc" ? "desc" : "asc",
         }));
+    }
+
+    function downloadCsvFile() {
+        downloadCSV(sortedFilteredData);
     }
 
     useEffect(() => {
@@ -84,6 +88,8 @@ function Dashboard() {
         setSortedFilteredData(sortedData);
     }, [sortBy, bookData, authorLoading, bookFetching]);
 
+    console.log(sortedFilteredData);
+
     return (
         <div className="mt-5">
             <div className="max-w-6xl mx-auto">
@@ -115,7 +121,13 @@ function Dashboard() {
                         </select>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="self-stretch px-3 py-2 flex justify-center cursor-pointer transition-all duration-300 items-center hover:bg-black hover:text-white rounded-md">
+                        <div
+                            onClick={() => {
+                                if (!sortedFilteredData) return;
+                                downloadCsvFile();
+                            }}
+                            className="self-stretch px-3 py-2 flex justify-center cursor-pointer transition-all duration-300 items-center hover:bg-black hover:text-white rounded-md"
+                        >
                             <GoDownload size={20} />
                         </div>
                         <select
@@ -147,10 +159,10 @@ function Dashboard() {
                 />
 
                 <div className="shadow-md  border-[#aaaaaa] rounded-md px-4 py-3 flex items-center justify-between">
-                    {books.numFound === 0 && search.length > 0 && (
+                    {books?.numFound === 0 && search.length > 0 && (
                         <div>No results found</div>
                     )}
-                    {books.numFound > 0 && search.length > 0 && (
+                    {books?.numFound > 0 && search.length > 0 && (
                         <div>
                             Showing:{" "}
                             <span className="font-semibold">
@@ -167,14 +179,14 @@ function Dashboard() {
                             results
                         </div>
                     )}
-                    {books.numFound > 0 && search.length > 0 && (
+                    {books?.numFound > 0 && search.length > 0 && (
                         <div className="ml-auto mr-4">
                             Page: <span className="font-semibold">{page}</span>{" "}
                             of{" "}
                             <span className="font-semibold">{totalPage}</span>
                         </div>
                     )}
-                    {books.numFound > 0 && search.length > 0 && (
+                    {books?.numFound > 0 && search.length > 0 && (
                         <div className="flex items-center">
                             <button
                                 onClick={() => {
